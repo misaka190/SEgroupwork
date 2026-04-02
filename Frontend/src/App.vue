@@ -1,47 +1,37 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import { ref } from 'vue'
+import AppSidebar from '@/components/AppSidebar.vue'
+import AppHeader from '@/components/AppHeader.vue'
+
+const sidebarCollapsed = ref(false)
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
-
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
-    </div>
-  </header>
-
-  <main>
-    <TheWelcome />
-  </main>
+  <div class="app-layout">
+    <AppSidebar v-model:collapsed="sidebarCollapsed" />
+    <AppHeader :sidebarCollapsed="sidebarCollapsed" />
+    <main
+      class="app-content"
+      :style="{
+        marginLeft: sidebarCollapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)',
+      }"
+    >
+      <router-view />
+    </main>
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
+.app-layout {
+  height: 100vh;
+  overflow: hidden;
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+.app-content {
+  margin-top: var(--header-height);
+  height: calc(100vh - var(--header-height));
+  overflow: hidden;
+  transition: margin-left var(--transition-slow);
+  background: var(--bg-body);
 }
 </style>
