@@ -9,6 +9,11 @@ const router = createRouter({
       component: () => import('@/pages/DiagnosticWorkspace.vue'),
     },
     {
+      path: '/analysis',
+      name: 'analysis',
+      component: () => import('@/pages/ImageAnalysis.vue'),
+    },
+    {
       path: '/patients',
       name: 'patients',
       component: () => import('@/pages/PatientList.vue'),
@@ -22,6 +27,11 @@ const router = createRouter({
       path: '/settings',
       name: 'settings',
       component: () => import('@/pages/SystemSettings.vue'),
+    },
+    {
+      path: '/model-interface',
+      name: 'model-interface',
+      component: () => import('@/pages/ModelInterfacePage.vue'),
     },
     {
       path: '/help',

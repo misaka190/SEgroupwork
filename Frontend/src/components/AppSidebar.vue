@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const props = defineProps<{ collapsed: boolean }>()
@@ -8,14 +7,16 @@ const emit = defineEmits<{ 'update:collapsed': [value: boolean] }>()
 const route = useRoute()
 
 const navItems = [
-  { icon: 'workspace', label: '诊断工作台', path: '/', badge: 0 },
-  { icon: 'patients', label: '患者列表', path: '/patients', badge: 3 },
-  { icon: 'report', label: '诊断报告', path: '/report', badge: 0 },
+  { icon: 'workspace', label: 'Dashboard', path: '/', badge: 0 },
+  { icon: 'ai', label: 'Analysis', path: '/analysis', badge: 0 },
+  { icon: 'patients', label: 'Patients', path: '/patients', badge: 3 },
+  { icon: 'report', label: 'Reports', path: '/report', badge: 0 },
+  { icon: 'api', label: 'Model API', path: '/model-interface', badge: 0 },
 ]
 
 const bottomItems = [
-  { icon: 'settings', label: '系统设置', path: '/settings' },
-  { icon: 'help', label: '帮助文档', path: '/help' },
+  { icon: 'settings', label: 'Settings', path: '/settings' },
+  { icon: 'help', label: 'Help Center', path: '/help' },
 ]
 
 const isActive = (path: string) => route.path === path
@@ -23,22 +24,30 @@ const isActive = (path: string) => route.path === path
 
 <template>
   <aside class="sidebar" :class="{ collapsed: props.collapsed }">
-    <!-- Logo Area -->
     <div class="sidebar-logo">
       <div class="logo-icon">
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-          <rect width="28" height="28" rx="8" fill="var(--color-primary)"/>
-          <path d="M8 14h12M14 8v12" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
+          <rect width="28" height="28" rx="8" fill="url(#brandGradient)"/>
+          <path d="M8 8h12v12H8z" stroke="#fff" stroke-width="2" stroke-linejoin="round"/>
+          <path d="M11 11h6M11 14h4" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="brandGradient" x1="4" y1="4" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#1E6BFF"/>
+              <stop offset="1" stop-color="#103C7E"/>
+            </linearGradient>
+          </defs>
         </svg>
       </div>
       <transition name="fade">
-        <span v-if="!collapsed" class="logo-text">MedImage<span class="logo-accent">DX</span></span>
+        <div v-if="!collapsed" class="logo-copy">
+          <span class="logo-text">ClinicalNexus <span class="logo-accent">v2</span></span>
+          <span class="logo-subtitle">ACTIVE INSTANCE</span>
+        </div>
       </transition>
     </div>
 
-    <div class="divider" style="margin: var(--space-2) var(--space-4)"></div>
+    <div class="section-caption" v-if="!collapsed">Core Workspace</div>
 
-    <!-- Main Nav -->
     <nav class="sidebar-nav" role="navigation" aria-label="主导航">
       <router-link
         v-for="item in navItems"
@@ -50,24 +59,23 @@ const isActive = (path: string) => route.path === path
         :title="collapsed ? item.label : undefined"
       >
         <span class="nav-icon" :data-icon="item.icon">
-          <!-- CT Icon -->
           <svg v-if="item.icon === 'workspace'" width="20" height="20" viewBox="0 0 20 20" fill="none">
             <rect x="2" y="2" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
             <rect x="11" y="2" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
             <rect x="2" y="11" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
             <rect x="11" y="11" width="7" height="7" rx="2" stroke="currentColor" stroke-width="1.5"/>
           </svg>
-          <!-- Patients Icon -->
+          <svg v-else-if="item.icon === 'api'" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <path d="M6 5.5h8M10 3v2.5M7 9.5v5M13 9.5v5M4 9.5h12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
           <svg v-else-if="item.icon === 'patients'" width="20" height="20" viewBox="0 0 20 20" fill="none">
             <circle cx="10" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
             <path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
-          <!-- Report Icon -->
           <svg v-else-if="item.icon === 'report'" width="20" height="20" viewBox="0 0 20 20" fill="none">
             <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
             <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
           </svg>
-          <!-- AI Icon -->
           <svg v-else-if="item.icon === 'ai'" width="20" height="20" viewBox="0 0 20 20" fill="none">
             <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
             <path d="M10 6v4l2.5 2.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
@@ -86,7 +94,8 @@ const isActive = (path: string) => route.path === path
 
     <div class="sidebar-spacer"></div>
 
-    <!-- Bottom Nav -->
+    <div class="section-caption" v-if="!collapsed">Administration</div>
+
     <nav class="sidebar-nav sidebar-bottom" aria-label="设置导航">
       <router-link
         v-for="item in bottomItems"
@@ -113,7 +122,14 @@ const isActive = (path: string) => route.path === path
       </router-link>
     </nav>
 
-    <!-- Collapse Toggle -->
+    <div class="sidebar-footer" v-if="!collapsed">
+      <button class="deploy-button" type="button">Deploy New Model</button>
+      <div class="status-line">
+        <span class="status-dot"></span>
+        <span>System Status: Healthy</span>
+      </div>
+    </div>
+
     <button
       class="sidebar-toggle"
       @click="emit('update:collapsed', !collapsed)"
@@ -150,7 +166,7 @@ const isActive = (path: string) => route.path === path
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-4);
+  padding: 18px 18px 14px;
   height: var(--header-height);
   flex-shrink: 0;
 }
@@ -162,6 +178,12 @@ const isActive = (path: string) => route.path === path
   justify-content: center;
 }
 
+.logo-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
 .logo-text {
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
@@ -169,28 +191,44 @@ const isActive = (path: string) => route.path === path
   white-space: nowrap;
 }
 
+.logo-subtitle {
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
 .logo-accent {
   color: var(--color-primary);
+}
+
+.section-caption {
+  padding: 10px 18px 8px;
+  color: var(--text-muted);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 800;
 }
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  padding: var(--space-2) var(--space-2);
+  gap: 4px;
+  padding: 0 12px 10px;
 }
 
 .nav-item {
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-md);
+  padding: 11px 12px;
+  border-radius: 14px;
   color: var(--text-secondary);
   text-decoration: none;
   transition: all var(--transition-base);
   position: relative;
-  min-height: 40px;
+  min-height: 44px;
 }
 
 .nav-item:hover {
@@ -200,8 +238,21 @@ const isActive = (path: string) => route.path === path
 
 .nav-item.active,
 .nav-item.router-link-exact-active {
+  background: var(--bg-card);
+  color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.nav-item.active::after,
+.nav-item.router-link-exact-active::after {
+  content: '';
+  position: absolute;
+  right: -12px;
+  top: 8px;
+  bottom: 8px;
+  width: 3px;
+  border-radius: 999px;
   background: var(--color-primary);
-  color: var(--text-on-primary);
 }
 
 .nav-icon {
@@ -216,7 +267,7 @@ const isActive = (path: string) => route.path === path
 
 .nav-label {
   font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -225,6 +276,10 @@ const isActive = (path: string) => route.path === path
   font-size: 11px;
   min-width: 20px;
   text-align: center;
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  border-radius: 999px;
+  padding: 2px 6px;
 }
 
 .sidebar-spacer {
@@ -232,7 +287,39 @@ const isActive = (path: string) => route.path === path
 }
 
 .sidebar-bottom {
-  padding-bottom: var(--space-2);
+  padding-bottom: 8px;
+}
+
+.sidebar-footer {
+  padding: 8px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.deploy-button {
+  min-height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  color: #fff;
+  font-weight: 800;
+  box-shadow: 0 16px 30px rgba(22, 89, 193, 0.22);
+}
+
+.status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.14);
 }
 
 .sidebar-toggle {
@@ -240,8 +327,8 @@ const isActive = (path: string) => route.path === path
   align-items: center;
   justify-content: center;
   height: 40px;
-  margin: var(--space-2);
-  border-radius: var(--radius-md);
+  margin: 8px 12px 12px;
+  border-radius: 12px;
   color: var(--text-muted);
   transition: all var(--transition-base);
 }
@@ -267,5 +354,10 @@ const isActive = (path: string) => route.path === path
 
 [data-theme="dark"] .sidebar {
   border-right-color: var(--border-color);
+}
+
+[data-theme="dark"] .nav-item.active,
+[data-theme="dark"] .nav-item.router-link-exact-active {
+  background: rgba(255, 255, 255, 0.04);
 }
 </style>

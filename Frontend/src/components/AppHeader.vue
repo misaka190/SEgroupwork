@@ -1,7 +1,26 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
 import { useTheme } from '@/composables/useTheme'
 
 const { theme, toggle } = useTheme()
+const route = useRoute()
+
+const topNavItems = [
+  { label: 'Dashboard', path: '/' },
+  { label: 'Analysis', path: '/analysis' },
+  { label: 'Patients', path: '/patients' },
+  { label: 'Model API', path: '/model-interface' },
+]
+
+const searchPlaceholder = computed(() => {
+  if (route.path === '/model-interface') return 'Search API configurations...'
+  if (route.path === '/patients') return 'Search patients, IDs, or conditions...'
+  if (route.path === '/analysis') return 'Search scans, frames, or findings...'
+  return 'Search dashboards, reports, or workflows...'
+})
+
+const isCurrent = (path: string) => route.path === path
 
 defineProps<{
   sidebarCollapsed: boolean
@@ -11,15 +30,17 @@ defineProps<{
 <template>
   <header class="app-header" :style="{ left: sidebarCollapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)' }">
     <div class="header-left">
-      <div class="breadcrumb">
-        <span class="breadcrumb-item text-muted">影像诊断系统</span>
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" class="breadcrumb-sep">
-          <path d="M4.5 2.5l3 3.5-3 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
-        </svg>
-        <span class="breadcrumb-item">
-          <router-link to="/">诊断工作台</router-link>
-        </span>
-      </div>
+      <nav class="top-nav" aria-label="Top navigation">
+        <router-link
+          v-for="item in topNavItems"
+          :key="item.path"
+          :to="item.path"
+          class="top-nav-link"
+          :class="{ active: isCurrent(item.path) }"
+        >
+          {{ item.label }}
+        </router-link>
+      </nav>
     </div>
 
     <div class="header-center">
@@ -30,21 +51,28 @@ defineProps<{
         </svg>
         <input
           type="text"
-          placeholder="搜索患者、检查号、报告..."
+          :placeholder="searchPlaceholder"
           class="search-input"
-          aria-label="全局搜索"
+          aria-label="Global search"
         />
-        <kbd class="search-shortcut">⌘K</kbd>
       </div>
     </div>
 
     <div class="header-right">
-      <!-- Theme Toggle -->
+      <router-link to="/help" class="help-link">Help Center</router-link>
+
+      <button class="btn btn-icon btn-ghost notification-btn" aria-label="Notifications" title="Notifications">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+          <path d="M13.5 6.75a4.5 4.5 0 10-9 0c0 5.25-2.25 6.75-2.25 6.75h13.5s-2.25-1.5-2.25-6.75zM10.3 15.75a1.5 1.5 0 01-2.6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="notification-dot" style="top: 6px; right: 6px;"></span>
+      </button>
+
       <button
         class="btn btn-icon btn-ghost"
         @click="toggle"
-        :aria-label="theme === 'dark' ? '切换到明亮模式' : '切换到暗黑模式'"
-        :title="theme === 'dark' ? '明亮模式' : '暗黑模式'"
+        :aria-label="theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+        :title="theme === 'dark' ? 'Light mode' : 'Dark mode'"
       >
         <svg v-if="theme === 'light'" width="18" height="18" viewBox="0 0 18 18" fill="none">
           <circle cx="9" cy="9" r="4" stroke="currentColor" stroke-width="1.5"/>
@@ -55,19 +83,19 @@ defineProps<{
         </svg>
       </button>
 
-      <!-- Notifications -->
-      <button class="btn btn-icon btn-ghost notification-btn" aria-label="通知" title="通知">
+      <router-link to="/settings" class="btn btn-icon btn-ghost settings-link" aria-label="Settings" title="Settings">
         <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
-          <path d="M13.5 6.75a4.5 4.5 0 10-9 0c0 5.25-2.25 6.75-2.25 6.75h13.5s-2.25-1.5-2.25-6.75zM10.3 15.75a1.5 1.5 0 01-2.6 0" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="9" cy="9" r="3" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M9 1.8v1.8M9 14.4v1.8M1.8 9h1.8M14.4 9h1.8M3.9 3.9l1.3 1.3M12.8 12.8l1.3 1.3M3.9 14.1l1.3-1.3M12.8 5.2l1.3-1.3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
         </svg>
-        <span class="notification-dot" style="top: 6px; right: 6px;"></span>
-      </button>
+      </router-link>
 
-      <!-- User Avatar -->
-      <div class="user-avatar" title="Dr. 张医生">
-        <div class="avatar">张</div>
-        <span class="user-name">张医生</span>
-        <span class="user-role text-muted text-xs">放射科</span>
+      <div class="user-avatar" title="Dr. Sarah Chen">
+        <div class="user-copy">
+          <span class="user-name">Dr. Sarah Chen</span>
+          <span class="user-role text-muted text-xs">Chief Pathologist</span>
+        </div>
+        <div class="avatar">SC</div>
       </div>
     </div>
   </header>
@@ -83,34 +111,46 @@ defineProps<{
   border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
-  padding: 0 var(--space-6);
-  gap: var(--space-6);
+  padding: 0 22px;
+  gap: 18px;
   z-index: var(--z-header);
   transition: left var(--transition-slow), background-color var(--transition-base);
+  backdrop-filter: blur(18px);
 }
 
 .header-left {
   flex-shrink: 0;
 }
 
-.breadcrumb {
+.top-nav {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-sm);
+  gap: 4px;
+  white-space: nowrap;
 }
 
-.breadcrumb-item a {
-  font-weight: var(--font-weight-medium);
+.top-nav-link {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 12px;
+  border-radius: 12px;
+  transition: all var(--transition-base);
 }
 
-.breadcrumb-sep {
-  color: var(--text-muted);
+.top-nav-link:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.top-nav-link.active {
+  color: var(--text-primary);
+  background: rgba(22, 89, 193, 0.08);
 }
 
 .header-center {
   flex: 1;
-  max-width: 480px;
+  max-width: 420px;
 }
 
 .search-bar {
@@ -118,16 +158,16 @@ defineProps<{
   align-items: center;
   background: var(--bg-input);
   border: 1px solid var(--border-color);
-  border-radius: var(--radius-lg);
-  padding: 0 var(--space-3);
-  height: 40px;
+  border-radius: 14px;
+  padding: 0 14px;
+  height: 42px;
   gap: var(--space-2);
   transition: all var(--transition-fast);
 }
 
 .search-bar:focus-within {
   border-color: var(--color-primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 0 0 3px rgba(22, 89, 193, 0.08);
 }
 
 .search-icon {
@@ -149,22 +189,17 @@ defineProps<{
   box-shadow: none;
 }
 
-.search-shortcut {
-  flex-shrink: 0;
-  background: var(--bg-hover);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-sm);
-  padding: 2px 6px;
-  font-size: 11px;
-  color: var(--text-muted);
-  font-family: inherit;
-}
-
 .header-right {
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: 10px;
   flex-shrink: 0;
+}
+
+.help-link {
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .notification-btn {
@@ -174,29 +209,37 @@ defineProps<{
 .user-avatar {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding-left: var(--space-3);
+  gap: 10px;
+  padding-left: 14px;
   border-left: 1px solid var(--border-color);
   cursor: pointer;
 }
 
+.user-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
 .avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-full);
-  background: var(--color-primary);
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
   color: #fff;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-semibold);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  font-weight: 800;
   flex-shrink: 0;
 }
 
 .user-name {
-  font-size: var(--font-size-sm);
-  font-weight: var(--font-weight-medium);
+  font-size: 13px;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -210,8 +253,18 @@ defineProps<{
   }
 }
 
+@media (max-width: 1100px) {
+  .top-nav {
+    display: none;
+  }
+}
+
 @media (max-width: 767px) {
   .header-center {
+    display: none;
+  }
+
+  .help-link {
     display: none;
   }
 }

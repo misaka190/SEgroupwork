@@ -1,637 +1,506 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
+
+type PatientStatus = 'completed' | 'review' | 'priority'
+
+type PatientRecord = {
+  id: string
+  name: string
+  gender: string
+  age: number
+  lastScan: string
+  totalScans: number
+  status: PatientStatus
+  tone: string
+}
 
 const searchQuery = ref('')
-const filterModality = ref('all')
-const filterStatus = ref('all')
-const filterPriority = ref('all')
-const sortBy = ref('date')
-const viewMode = ref<'table' | 'card'>('table')
+const statusFilter = ref('all')
+const scanDateFilter = ref('all')
 
-const patients = ref([
-  { id: 'P20260045', name: '王建国', age: 58, gender: '男', modality: 'CT', bodyPart: '头部', date: '2026-03-30', status: 'pending', priority: 'urgent', description: '头痛3天，排除脑出血', doctor: '李主任' },
-  { id: 'P20260044', name: '刘芳', age: 45, gender: '女', modality: 'MRI', bodyPart: '脑部', date: '2026-03-30', status: 'pending', priority: 'normal', description: '头晕伴视物模糊', doctor: '张教授' },
-  { id: 'P20260043', name: '陈明', age: 72, gender: '男', modality: 'CT', bodyPart: '胸部', date: '2026-03-30', status: 'in-progress', priority: 'urgent', description: '咳嗽咯血2周', doctor: '王医生' },
-  { id: 'P20260042', name: '李红', age: 35, gender: '女', modality: 'X-Ray', bodyPart: '胸部', date: '2026-03-29', status: 'completed', priority: 'normal', description: '入职体检', doctor: '赵医生' },
-  { id: 'P20260041', name: '张伟', age: 62, gender: '男', modality: 'MRI', bodyPart: '腰椎', date: '2026-03-29', status: 'completed', priority: 'normal', description: '腰痛半年加重', doctor: '刘主任' },
-  { id: 'P20260040', name: '赵丽', age: 50, gender: '女', modality: 'CT', bodyPart: '腹部', date: '2026-03-29', status: 'pending', priority: 'high', description: '腹痛呕吐1天', doctor: '李主任' },
-  { id: 'P20260039', name: '孙洋', age: 28, gender: '男', modality: 'X-Ray', bodyPart: '四肢', date: '2026-03-28', status: 'completed', priority: 'normal', description: '外伤后左踝疼痛', doctor: '陈医生' },
-  { id: 'P20260038', name: '周婷', age: 67, gender: '女', modality: 'CT', bodyPart: '头部', date: '2026-03-28', status: 'completed', priority: 'urgent', description: '突发左侧肢体无力', doctor: '张教授' },
-  { id: 'P20260037', name: '吴强', age: 55, gender: '男', modality: 'MRI', bodyPart: '膝关节', date: '2026-03-28', status: 'in-progress', priority: 'normal', description: '右膝关节肿痛3月', doctor: '赵医生' },
-  { id: 'P20260036', name: '郑美', age: 40, gender: '女', modality: 'CT', bodyPart: '胸部', date: '2026-03-27', status: 'completed', priority: 'normal', description: '体检发现肺部结节', doctor: '李主任' },
+const patients = ref<PatientRecord[]>([
+  { id: '#PX-8821', name: '李雯', gender: '女', age: 42, lastScan: '2023年10月24日', totalScans: 12, status: 'completed', tone: 'tone-a' },
+  { id: '#PX-9042', name: '周明', gender: '男', age: 58, lastScan: '2023年10月26日', totalScans: 3, status: 'review', tone: 'tone-b' },
+  { id: '#PX-7119', name: '陈雪', gender: '女', age: 31, lastScan: '2023年10月27日', totalScans: 1, status: 'priority', tone: 'tone-c' },
+  { id: '#PX-6632', name: '王建国', gender: '男', age: 74, lastScan: '2023年10月28日', totalScans: 24, status: 'completed', tone: 'tone-d' },
+  { id: '#PX-6604', name: '赵婷', gender: '女', age: 47, lastScan: '2023年10月29日', totalScans: 8, status: 'review', tone: 'tone-e' },
+  { id: '#PX-6521', name: '刘强', gender: '男', age: 53, lastScan: '2023年10月30日', totalScans: 17, status: 'completed', tone: 'tone-f' },
 ])
 
 const filteredPatients = computed(() => {
-  let result = patients.value
-  if (searchQuery.value) {
-    const q = searchQuery.value.toLowerCase()
-    result = result.filter(p =>
-      p.name.toLowerCase().includes(q) ||
-      p.id.toLowerCase().includes(q) ||
-      p.description.toLowerCase().includes(q)
-    )
-  }
-  if (filterModality.value !== 'all') {
-    result = result.filter(p => p.modality === filterModality.value)
-  }
-  if (filterStatus.value !== 'all') {
-    result = result.filter(p => p.status === filterStatus.value)
-  }
-  if (filterPriority.value !== 'all') {
-    result = result.filter(p => p.priority === filterPriority.value)
-  }
-  return result
+  return patients.value.filter((patient) => {
+    const matchesSearch =
+      patient.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
+      patient.id.toLowerCase().includes(searchQuery.value.toLowerCase())
+
+    const matchesStatus = statusFilter.value === 'all' || patient.status === statusFilter.value
+    const matchesDate =
+      scanDateFilter.value === 'all' ||
+      (scanDateFilter.value === 'recent' && ['2023年10月28日', '2023年10月29日', '2023年10月30日'].includes(patient.lastScan)) ||
+      (scanDateFilter.value === 'week' && patient.lastScan.startsWith('2023年10月'))
+
+    return matchesSearch && matchesStatus && matchesDate
+  })
 })
 
-const statusLabel = (s: string) => {
-  switch(s) {
-    case 'pending': return '待阅'
-    case 'in-progress': return '阅片中'
-    case 'completed': return '已完成'
-    default: return s
-  }
+const statusLabelMap: Record<PatientStatus, string> = {
+  completed: '已完成',
+  review: '待复核',
+  priority: '高优先级',
 }
 
-const statusBadge = (s: string) => {
-  switch(s) {
-    case 'pending': return 'badge-warning'
-    case 'in-progress': return 'badge-primary'
-    case 'completed': return 'badge-success'
-    default: return ''
-  }
+function initials(name: string) {
+  return name
+    .split(' ')
+    .map((part) => part[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase()
 }
-
-const priorityLabel = (p: string) => {
-  switch(p) {
-    case 'urgent': return '紧急'
-    case 'high': return '高'
-    case 'normal': return '常规'
-    default: return p
-  }
-}
-
-const priorityBadge = (p: string) => {
-  switch(p) {
-    case 'urgent': return 'badge-danger'
-    case 'high': return 'badge-warning'
-    default: return 'badge-primary'
-  }
-}
-
-const stats = computed(() => ({
-  total: patients.value.length,
-  pending: patients.value.filter(p => p.status === 'pending').length,
-  inProgress: patients.value.filter(p => p.status === 'in-progress').length,
-  completed: patients.value.filter(p => p.status === 'completed').length,
-  urgent: patients.value.filter(p => p.priority === 'urgent').length,
-}))
 </script>
 
 <template>
-  <div class="patient-list-page">
-    <!-- Stats Cards -->
-    <div class="stats-row">
-      <div class="stat-card card">
-        <div class="stat-icon" style="background: var(--color-primary-light); color: var(--color-primary);">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="6" r="3" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ stats.total }}</span>
-          <span class="stat-label text-xs text-muted">总检查数</span>
-        </div>
+  <section class="brand-page records-page">
+    <div class="page-head">
+      <div>
+        <p class="eyebrow">临床目录</p>
+        <h1 class="page-title">患者档案</h1>
+        <p class="page-desc">集中管理当前临床病例与历史诊断数据的完整档案库。</p>
       </div>
-      <div class="stat-card card">
-        <div class="stat-icon" style="background: var(--color-warning-light); color: var(--color-warning);">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <circle cx="10" cy="10" r="7" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M10 6v4l2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ stats.pending }}</span>
-          <span class="stat-label text-xs text-muted">待阅</span>
-        </div>
-      </div>
-      <div class="stat-card card">
-        <div class="stat-icon" style="background: var(--color-primary-light); color: var(--color-primary);">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <rect x="3" y="2" width="14" height="16" rx="2" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M7 7h6M7 10h6M7 13h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ stats.inProgress }}</span>
-          <span class="stat-label text-xs text-muted">阅片中</span>
-        </div>
-      </div>
-      <div class="stat-card card">
-        <div class="stat-icon" style="background: var(--color-danger-light); color: var(--color-danger);">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-            <path d="M10 3l7 12H3L10 3z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
-            <path d="M10 8v3M10 13v.01" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <span class="stat-value">{{ stats.urgent }}</span>
-          <span class="stat-label text-xs text-muted">紧急</span>
-        </div>
+
+      <div class="page-actions">
+        <button type="button" class="secondary-button">导出 CSV</button>
+        <button type="button" class="primary-button">新增患者</button>
       </div>
     </div>
 
-    <!-- Search & Filters -->
-    <div class="filter-bar card">
-      <div class="filter-row">
-        <div class="search-field">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" class="search-field-icon">
-            <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
-            <path d="M11 11l3 3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    <article class="toolbar-card card-shell">
+      <div class="toolbar-left">
+        <label class="search-box" aria-label="搜索患者">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="7" cy="7" r="4.75" stroke="currentColor" stroke-width="1.4"/>
+            <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
           </svg>
-          <input
-            v-model="searchQuery"
-            type="text"
-            placeholder="搜索患者姓名、ID、描述..."
-            class="filter-input"
-            aria-label="搜索患者"
-          />
+          <input v-model="searchQuery" type="text" placeholder="按姓名、编号或病情筛选..." />
+        </label>
+
+        <label class="select-box">
+          <select v-model="statusFilter" aria-label="筛选状态">
+            <option value="all">状态</option>
+            <option value="completed">已完成</option>
+            <option value="review">待复核</option>
+            <option value="priority">高优先级</option>
+          </select>
+        </label>
+
+        <label class="select-box">
+          <select v-model="scanDateFilter" aria-label="筛选检查日期">
+            <option value="all">检查日期</option>
+            <option value="recent">最近</option>
+            <option value="week">本周</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="toolbar-meta">当前显示 {{ filteredPatients.length }} / 1,280 位患者</div>
+    </article>
+
+    <article class="table-card card-shell">
+      <div class="table-row header-row">
+        <span>患者编号</span>
+        <span>患者信息</span>
+        <span>最近检查日期</span>
+        <span>检查总数</span>
+        <span>诊断状态</span>
+        <span>操作</span>
+      </div>
+
+      <div v-for="patient in filteredPatients" :key="patient.id" class="table-row body-row">
+        <div class="cell patient-id-cell">
+          <span class="patient-code">{{ patient.id }}</span>
         </div>
-        <select v-model="filterModality" class="filter-select" aria-label="检查类型">
-          <option value="all">全部类型</option>
-          <option value="CT">CT</option>
-          <option value="MRI">MRI</option>
-          <option value="X-Ray">X-Ray</option>
-        </select>
-        <select v-model="filterStatus" class="filter-select" aria-label="状态">
-          <option value="all">全部状态</option>
-          <option value="pending">待阅</option>
-          <option value="in-progress">阅片中</option>
-          <option value="completed">已完成</option>
-        </select>
-        <select v-model="filterPriority" class="filter-select" aria-label="优先级">
-          <option value="all">全部优先级</option>
-          <option value="urgent">紧急</option>
-          <option value="high">高</option>
-          <option value="normal">常规</option>
-        </select>
-        <div class="view-toggle">
-          <button
-            class="btn btn-icon btn-sm"
-            :class="viewMode === 'table' ? 'btn-primary' : 'btn-ghost'"
-            @click="viewMode = 'table'"
-            aria-label="表格视图"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <path d="M2 3h10M2 7h10M2 11h10" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            </svg>
-          </button>
-          <button
-            class="btn btn-icon btn-sm"
-            :class="viewMode === 'card' ? 'btn-primary' : 'btn-ghost'"
-            @click="viewMode = 'card'"
-            aria-label="卡片视图"
-          >
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-              <rect x="1" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
-              <rect x="8" y="1" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
-              <rect x="1" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
-              <rect x="8" y="8" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.3"/>
+
+        <div class="cell identity-cell">
+          <div class="avatar" :class="patient.tone">{{ initials(patient.name) }}</div>
+          <div class="identity-copy">
+            <strong>{{ patient.name }}</strong>
+            <span>{{ patient.gender }} · {{ patient.age }} 岁</span>
+          </div>
+        </div>
+
+        <div class="cell muted-cell">{{ patient.lastScan }}</div>
+
+        <div class="cell scans-cell">
+          <strong>{{ patient.totalScans }}</strong>
+          <span class="scan-bars"><i></i><i></i><i></i></span>
+        </div>
+
+        <div class="cell">
+          <span class="status-pill" :class="`status-${patient.status}`">{{ statusLabelMap[patient.status] }}</span>
+        </div>
+
+        <div class="cell actions-cell">
+          <button type="button" class="icon-button" aria-label="更多操作">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="3.5" r="1.2" fill="currentColor"/>
+              <circle cx="8" cy="8" r="1.2" fill="currentColor"/>
+              <circle cx="8" cy="12.5" r="1.2" fill="currentColor"/>
             </svg>
           </button>
         </div>
       </div>
-      <div class="filter-tags" v-if="searchQuery || filterModality !== 'all' || filterStatus !== 'all' || filterPriority !== 'all'">
-        <span class="filter-tag" v-if="searchQuery">
-          搜索: {{ searchQuery }}
-          <button @click="searchQuery = ''" class="tag-remove" aria-label="清除搜索">&times;</button>
-        </span>
-        <span class="filter-tag" v-if="filterModality !== 'all'">
-          {{ filterModality }}
-          <button @click="filterModality = 'all'" class="tag-remove" aria-label="清除类型筛选">&times;</button>
-        </span>
-        <span class="filter-tag" v-if="filterStatus !== 'all'">
-          {{ statusLabel(filterStatus) }}
-          <button @click="filterStatus = 'all'" class="tag-remove" aria-label="清除状态筛选">&times;</button>
-        </span>
-        <span class="filter-tag" v-if="filterPriority !== 'all'">
-          {{ priorityLabel(filterPriority) }}
-          <button @click="filterPriority = 'all'" class="tag-remove" aria-label="清除优先级筛选">&times;</button>
-        </span>
-        <button class="btn btn-sm btn-ghost" @click="searchQuery = ''; filterModality = 'all'; filterStatus = 'all'; filterPriority = 'all'">
-          清除全部
-        </button>
-      </div>
-    </div>
 
-    <!-- Table View -->
-    <div v-if="viewMode === 'table'" class="patient-table-wrapper card">
-      <table class="patient-table" role="table" aria-label="患者列表">
-        <thead>
-          <tr>
-            <th>优先级</th>
-            <th>患者</th>
-            <th>检查类型</th>
-            <th>部位</th>
-            <th>日期</th>
-            <th>描述</th>
-            <th>申请医生</th>
-            <th>状态</th>
-            <th>操作</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="p in filteredPatients"
-            :key="p.id"
-            class="patient-row"
-            :class="{ urgent: p.priority === 'urgent' }"
-          >
-            <td>
-              <span class="badge" :class="priorityBadge(p.priority)">{{ priorityLabel(p.priority) }}</span>
-            </td>
-            <td>
-              <div class="patient-cell">
-                <span class="font-medium">{{ p.name }}</span>
-                <span class="text-xs text-muted">{{ p.id }} · {{ p.age }}岁/{{ p.gender }}</span>
-              </div>
-            </td>
-            <td>
-              <span class="badge" :class="{
-                'badge-primary': p.modality === 'CT',
-                'badge-accent': p.modality === 'MRI',
-                'badge-warning': p.modality === 'X-Ray'
-              }">{{ p.modality }}</span>
-            </td>
-            <td>{{ p.bodyPart }}</td>
-            <td class="text-sm text-muted">{{ p.date }}</td>
-            <td class="desc-cell text-sm">{{ p.description }}</td>
-            <td class="text-sm">{{ p.doctor }}</td>
-            <td>
-              <span class="badge" :class="statusBadge(p.status)">{{ statusLabel(p.status) }}</span>
-            </td>
-            <td>
-              <div class="action-btns">
-                <router-link to="/" class="btn btn-sm btn-primary">阅片</router-link>
-                <button class="btn btn-sm btn-ghost">详情</button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
       <div v-if="filteredPatients.length === 0" class="empty-state">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-          <circle cx="24" cy="24" r="20" stroke="var(--text-muted)" stroke-width="1.5"/>
-          <circle cx="24" cy="20" r="6" stroke="var(--text-muted)" stroke-width="1.5"/>
-          <path d="M12 40c0-6.6 5.4-12 12-12s12 5.4 12 12" stroke="var(--text-muted)" stroke-width="1.5" stroke-linecap="round"/>
-        </svg>
-        <p class="text-muted">未找到匹配的患者记录</p>
+        <strong>当前筛选条件下没有匹配记录。</strong>
+        <span>请尝试清空状态或搜索条件。</span>
       </div>
-    </div>
 
-    <!-- Card View -->
-    <div v-if="viewMode === 'card'" class="patient-cards">
-      <div
-        v-for="p in filteredPatients"
-        :key="p.id"
-        class="patient-card card"
-        :class="{ urgent: p.priority === 'urgent' }"
-      >
-        <div class="pc-header">
-          <div class="pc-patient">
-            <div class="pc-avatar">{{ p.name[0] }}</div>
-            <div>
-              <span class="font-medium">{{ p.name }}</span>
-              <span class="text-xs text-muted">{{ p.id }} · {{ p.age }}岁/{{ p.gender }}</span>
-            </div>
-          </div>
-          <span class="badge" :class="priorityBadge(p.priority)">{{ priorityLabel(p.priority) }}</span>
-        </div>
-        <div class="pc-body">
-          <div class="pc-meta">
-            <span class="badge" :class="{
-              'badge-primary': p.modality === 'CT',
-              'badge-accent': p.modality === 'MRI',
-              'badge-warning': p.modality === 'X-Ray'
-            }">{{ p.modality }}</span>
-            <span class="text-sm">{{ p.bodyPart }}</span>
-            <span class="text-xs text-muted">{{ p.date }}</span>
-          </div>
-          <p class="text-sm pc-desc">{{ p.description }}</p>
-          <div class="pc-footer">
-            <span class="badge" :class="statusBadge(p.status)">{{ statusLabel(p.status) }}</span>
-            <router-link to="/" class="btn btn-sm btn-primary">阅片</router-link>
+      <div class="table-footer">
+        <div class="rows-meta">每页行数：<strong>10</strong></div>
+        <div class="pagination-meta">
+          <span>1-10 / 1,280</span>
+          <div class="pager-buttons">
+            <button type="button" class="pager-button" aria-label="上一页">‹</button>
+            <button type="button" class="pager-button" aria-label="下一页">›</button>
           </div>
         </div>
       </div>
-    </div>
+    </article>
 
-    <!-- Pagination -->
-    <div class="pagination">
-      <span class="text-sm text-muted">显示 {{ filteredPatients.length }} 条结果</span>
-      <div class="pagination-btns">
-        <button class="btn btn-sm btn-ghost" disabled>上一页</button>
-        <button class="btn btn-sm btn-primary">1</button>
-        <button class="btn btn-sm btn-ghost">2</button>
-        <button class="btn btn-sm btn-ghost">下一页</button>
-      </div>
+    <div class="insight-row">
+      <article class="insight-card card-shell insight-large">
+        <div class="insight-icon">✦</div>
+        <div>
+          <h3>AI 数据增强已开启</h3>
+          <p>患者档案正在持续与最新 MRI 和 CT 数据交叉比对，以识别潜在异常模式。</p>
+        </div>
+      </article>
+
+      <article class="insight-card card-shell insight-side">
+        <div class="storage-head">
+          <span>存储完整性</span>
+          <strong>98.2%</strong>
+        </div>
+        <div class="storage-bar"><span></span></div>
+        <p>全部医疗数据均采用 AES-256 加密，并符合最新临床数据治理规范。</p>
+      </article>
     </div>
-  </div>
+  </section>
 </template>
 
 <style scoped>
-.patient-list-page {
-  padding: var(--space-6);
+.brand-page {
   height: 100%;
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
+  padding: 24px;
+  overflow: auto;
+  background:
+    radial-gradient(circle at top left, rgba(22, 89, 193, 0.08), transparent 18%),
+    linear-gradient(180deg, #f7f9fc 0%, #eef3fa 100%);
 }
 
-/* Stats */
-.stats-row {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
-}
-
-.stat-card {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-4) var(--space-6);
-}
-
-.stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: var(--radius-lg);
+.page-head,
+.page-actions,
+.toolbar-card,
+.toolbar-left,
+.table-footer,
+.pagination-meta,
+.pager-buttons,
+.identity-cell,
+.scans-cell,
+.insight-row,
+.storage-head {
   display: flex;
   align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
 }
 
-.stat-content {
-  display: flex;
-  flex-direction: column;
+.page-head {
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 22px;
 }
 
-.stat-value {
-  font-size: var(--font-size-2xl);
-  font-weight: var(--font-weight-bold);
+.eyebrow,
+.storage-head span {
+  color: #6b7280;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
 }
 
-.stat-label {
-  margin-top: 2px;
+.page-title {
+  margin: 6px 0;
+  font-size: 40px;
+  line-height: 1;
+  font-weight: 800;
+  color: #111827;
 }
 
-/* Filter Bar */
-.filter-bar {
-  padding: var(--space-4) var(--space-6);
+.page-desc {
+  margin: 0;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.6;
 }
 
-.filter-row {
-  display: flex;
-  gap: var(--space-3);
-  align-items: center;
+.page-actions { gap: 12px; }
+
+.primary-button,
+.secondary-button,
+.icon-button,
+.pager-button {
+  border: none;
+  cursor: pointer;
+}
+
+.primary-button,
+.secondary-button {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 14px;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.primary-button {
+  background: linear-gradient(135deg, #1659c1, #0f4fa8);
+  color: #fff;
+  box-shadow: 0 16px 28px rgba(22, 89, 193, 0.18);
+}
+
+.secondary-button {
+  background: rgba(255, 255, 255, 0.92);
+  color: #0f172a;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.05);
+}
+
+.card-shell {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(230, 237, 245, 0.95);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.05);
+}
+
+.toolbar-card {
+  justify-content: space-between;
+  gap: 18px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.toolbar-left {
+  gap: 12px;
   flex-wrap: wrap;
 }
 
-.search-field {
-  flex: 1;
-  min-width: 200px;
-  position: relative;
-}
-
-.search-field-icon {
-  position: absolute;
-  left: var(--space-3);
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  pointer-events: none;
-}
-
-.filter-input {
-  width: 100%;
-  padding-left: 36px;
-}
-
-.filter-select {
-  min-width: 120px;
-}
-
-.view-toggle {
-  display: flex;
-  gap: 2px;
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 2px;
-}
-
-.filter-tags {
-  display: flex;
-  gap: var(--space-2);
-  margin-top: var(--space-3);
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.filter-tag {
+.search-box,
+.select-box {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  padding: 2px var(--space-2) 2px var(--space-3);
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  border-radius: var(--radius-full);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-medium);
+  gap: 10px;
+  min-height: 48px;
+  border-radius: 14px;
+  background: #f8fbff;
+  border: 1px solid #e5edf5;
+  padding: 0 14px;
+  color: #64748b;
 }
 
-.tag-remove {
-  width: 16px;
-  height: 16px;
-  display: flex;
+.search-box { min-width: 320px; }
+
+.search-box input,
+.select-box select {
+  border: none;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #334155;
+}
+
+.select-box select {
+  min-width: 120px;
+  font-weight: 700;
+}
+
+.toolbar-meta { color: #64748b; font-size: 13px; }
+
+.table-card { overflow: hidden; }
+
+.table-row {
+  display: grid;
+  grid-template-columns: 0.8fr 1.8fr 1fr 0.8fr 1.2fr 0.5fr;
+  gap: 18px;
+  align-items: center;
+  padding: 18px 22px;
+}
+
+.header-row {
+  color: #6b7280;
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-weight: 800;
+}
+
+.body-row { border-top: 1px solid #eef2f7; }
+
+.patient-code {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  color: inherit;
-  font-size: 14px;
-  line-height: 1;
+  min-width: 64px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: #edf4ff;
+  color: #1659c1;
+  font-size: 12px;
+  font-weight: 700;
 }
 
-.tag-remove:hover {
-  background: rgba(59, 130, 246, 0.2);
+.identity-cell { gap: 12px; }
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 800;
 }
 
-/* Table */
-.patient-table-wrapper {
-  overflow-x: auto;
+.tone-a { background: linear-gradient(135deg, #353535, #96745b); }
+.tone-b { background: linear-gradient(135deg, #12293c, #315e6f); }
+.tone-c { background: linear-gradient(135deg, #ff4d6d, #8338ec); }
+.tone-d { background: linear-gradient(135deg, #3b3b3b, #8b6f47); }
+.tone-e { background: linear-gradient(135deg, #0f766e, #0ea5e9); }
+.tone-f { background: linear-gradient(135deg, #4f46e5, #1d4ed8); }
+
+.identity-copy { display: grid; gap: 2px; }
+.identity-copy strong { color: #111827; font-size: 16px; }
+.identity-copy span,
+.muted-cell { color: #64748b; font-size: 13px; }
+
+.scans-cell { gap: 10px; color: #111827; }
+
+.scan-bars { display: inline-flex; gap: 2px; }
+.scan-bars i { width: 3px; height: 12px; border-radius: 999px; background: #1659c1; }
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 28px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
 }
 
-.patient-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: var(--font-size-sm);
-}
+.status-completed { background: #dff3fc; color: #4c748b; }
+.status-review { background: #ffe6d8; color: #9b4a27; }
+.status-priority { background: #ffdada; color: #b62323; }
 
-.patient-table th {
-  text-align: left;
-  padding: var(--space-3) var(--space-4);
-  font-size: var(--font-size-xs);
-  font-weight: var(--font-weight-semibold);
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  border-bottom: 1px solid var(--border-color);
-  white-space: nowrap;
-}
+.actions-cell { display: flex; justify-content: flex-end; }
 
-.patient-table td {
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--border-color);
-  vertical-align: middle;
-}
-
-.patient-row {
-  transition: background var(--transition-fast);
-}
-
-.patient-row:hover {
-  background: var(--bg-hover);
-}
-
-.patient-row.urgent {
-  background: var(--color-danger-light);
-}
-
-.patient-row.urgent:hover {
-  background: var(--color-danger-light);
-  filter: brightness(0.97);
-}
-
-.patient-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.desc-cell {
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.action-btns {
-  display: flex;
-  gap: var(--space-1);
+.icon-button,
+.pager-button {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: transparent;
+  color: #475569;
 }
 
 .empty-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-4);
-  padding: var(--space-12);
-}
-
-/* Card View */
-.patient-cards {
+  padding: 42px 22px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: var(--space-4);
+  gap: 6px;
+  justify-items: center;
+  color: #64748b;
 }
 
-.patient-card {
-  padding: var(--space-4);
-}
-
-.patient-card.urgent {
-  border-left: 3px solid var(--color-danger);
-}
-
-.pc-header {
-  display: flex;
-  align-items: flex-start;
+.table-footer {
   justify-content: space-between;
-  margin-bottom: var(--space-3);
+  padding: 18px 22px;
+  border-top: 1px solid #eef2f7;
+  color: #64748b;
+  font-size: 13px;
 }
 
-.pc-patient {
-  display: flex;
-  gap: var(--space-3);
-}
+.rows-meta,
+.pagination-meta { gap: 8px; }
 
-.pc-patient > div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+.insight-row { gap: 20px; margin-top: 22px; }
 
-.pc-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: var(--radius-full);
-  background: var(--color-primary);
-  color: #fff;
-  display: flex;
+.insight-card { padding: 18px 20px; }
+.insight-large { flex: 1; display: flex; align-items: center; gap: 16px; }
+.insight-side { width: 280px; }
+
+.insight-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 14px;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: var(--font-weight-semibold);
+  background: linear-gradient(135deg, #2475d8, #1654b7);
+  color: #fff;
   flex-shrink: 0;
 }
 
-.pc-meta {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-2);
+.insight-large h3,
+.insight-side strong {
+  margin: 0 0 6px;
+  color: #0f172a;
+  font-size: 20px;
 }
 
-.pc-desc {
-  color: var(--text-secondary);
-  margin-bottom: var(--space-3);
+.insight-large p,
+.insight-side p {
+  margin: 0;
+  color: #64748b;
+  line-height: 1.6;
+  font-size: 13px;
 }
 
-.pc-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+.storage-head { justify-content: space-between; margin-bottom: 10px; }
+.storage-head strong { color: #1659c1; font-size: 14px; }
+
+.storage-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  overflow: hidden;
+  margin-bottom: 12px;
 }
 
-/* Pagination */
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-shrink: 0;
+.storage-bar span {
+  display: block;
+  width: 98.2%;
+  height: 100%;
+  background: linear-gradient(90deg, #1659c1, #3b82f6);
 }
 
-.pagination-btns {
-  display: flex;
-  gap: var(--space-1);
+@media (max-width: 1200px) {
+  .insight-row { flex-direction: column; }
+  .insight-side { width: auto; }
 }
 
-@media (max-width: 1279px) {
-  .stats-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
+@media (max-width: 960px) {
+  .page-head,
+  .toolbar-card { flex-direction: column; align-items: stretch; }
+  .page-actions { flex-direction: column; }
+  .search-box { min-width: 100%; }
+  .table-card { overflow: auto; }
+  .table-row { min-width: 900px; }
 }
 
-@media (max-width: 767px) {
-  .stats-row {
-    grid-template-columns: 1fr;
-  }
-  .filter-row {
-    flex-direction: column;
-    align-items: stretch;
-  }
-  .search-field {
-    min-width: 0;
-  }
+@media (max-width: 640px) {
+  .brand-page { padding: 16px; }
+  .page-title { font-size: 32px; }
 }
 </style>

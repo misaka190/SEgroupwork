@@ -3,35 +3,69 @@
    ============================================ */
 
 :root {
-  /* === Color Palette === */
-  --color-primary: #3B82F6;
-  --color-primary-hover: #2563EB;
-  --color-primary-light: #DBEAFE;
-  --color-primary-dark: #1D4ED8;
+  /* === Semantic Color Palette === */
+  /* Primary — 主操作、活跃态、链接 (Medical Blue) */
+  --color-primary: #1659C1;
+  --color-primary-hover: #0F4FA8;
+  --color-primary-light: #E6F0FF;
+  --color-primary-dark: #103C7E;
+  --color-primary-bg: #EEF4FF;
+  --color-primary-border: #B8D2FF;
+  --color-primary-text: #1447A6;
 
-  --color-accent: #14B8A6;
-  --color-accent-hover: #0D9488;
-  --color-accent-light: #CCFBF1;
+  /* Success — 完成态、正常值、已确认 */
+  --color-success: #10B981;
+  --color-success-hover: #059669;
+  --color-success-light: #D1FAE5;
+  --color-success-dark: #047857;
+  --color-success-bg: #ECFDF5;
+  --color-success-border: #6EE7B7;
+  --color-success-text: #065F46;
 
-  --color-danger: #F43F5E;
-  --color-danger-hover: #E11D48;
-  --color-danger-light: #FFE4E6;
-
+  /* Warning — 待审阅、注意事项、临界值 */
   --color-warning: #F59E0B;
   --color-warning-hover: #D97706;
   --color-warning-light: #FEF3C7;
+  --color-warning-dark: #B45309;
+  --color-warning-bg: #FFFBEB;
+  --color-warning-border: #FCD34D;
+  --color-warning-text: #92400E;
 
-  --color-success: #10B981;
-  --color-success-light: #D1FAE5;
+  /* Danger — 危急值、删除、错误、取消 */
+  --color-danger: #F43F5E;
+  --color-danger-hover: #E11D48;
+  --color-danger-light: #FFE4E6;
+  --color-danger-dark: #BE123C;
+  --color-danger-bg: #FFF1F2;
+  --color-danger-border: #FDA4AF;
+  --color-danger-text: #9F1239;
+
+  /* Info — 提示信息、元数据、辅助说明 */
+  --color-info: #0EA5E9;
+  --color-info-hover: #0284C7;
+  --color-info-light: #E0F2FE;
+  --color-info-dark: #0369A1;
+  --color-info-bg: #F0F9FF;
+  --color-info-border: #7DD3FC;
+  --color-info-text: #075985;
+
+  /* Accent — AI 建议、辅助诊断 (Teal) */
+  --color-accent: #14B8A6;
+  --color-accent-hover: #0D9488;
+  --color-accent-light: #CCFBF1;
+  --color-accent-dark: #0F766E;
+  --color-accent-bg: #F0FDFA;
+  --color-accent-border: #5EEAD4;
+  --color-accent-text: #115E59;
 
   /* === Light Mode (default) === */
-  --bg-body: #F9FAFB;
+  --bg-body: #F4F7FB;
   --bg-card: #FFFFFF;
-  --bg-sidebar: #FFFFFF;
-  --bg-header: #FFFFFF;
-  --bg-input: #F9FAFB;
-  --bg-hover: #F1F5F9;
-  --bg-active: #EFF6FF;
+  --bg-sidebar: linear-gradient(180deg, #F8FAFD 0%, #F1F5FA 100%);
+  --bg-header: rgba(255, 255, 255, 0.92);
+  --bg-input: #F8FAFD;
+  --bg-hover: #EEF3F9;
+  --bg-active: #EAF1FF;
   --bg-viewer: #000000;
   --bg-toolbar: rgba(255, 255, 255, 0.85);
 
@@ -41,13 +75,13 @@
   --text-on-primary: #FFFFFF;
   --text-on-viewer: #FFFFFF;
 
-  --border-color: #E2E8F0;
-  --border-active: #3B82F6;
+  --border-color: #E6EDF5;
+  --border-active: #1659C1;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
-  --shadow-toolbar: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 10px 20px rgba(15, 23, 42, 0.06);
+  --shadow-lg: 0 22px 48px rgba(15, 23, 42, 0.08);
+  --shadow-toolbar: 0 18px 38px rgba(15, 23, 42, 0.08);
 
   /* === Spacing (8px grid) === */
   --space-1: 4px;
@@ -61,9 +95,9 @@
   --space-12: 48px;
 
   /* === Layout === */
-  --sidebar-width: 240px;
+  --sidebar-width: 248px;
   --sidebar-collapsed: 64px;
-  --header-height: 64px;
+  --header-height: 72px;
   --right-panel-width: 320px;
 
   /* === Typography === */
@@ -83,9 +117,9 @@
 
   /* === Borders === */
   --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
   --radius-full: 9999px;
 
   /* === Transitions === */
@@ -103,10 +137,10 @@
 
 /* === Dark Mode === */
 [data-theme="dark"] {
-  --bg-body: #0F172A;
-  --bg-card: #1E293B;
-  --bg-sidebar: #1E293B;
-  --bg-header: #1E293B;
+  --bg-body: #0C1424;
+  --bg-card: #162033;
+  --bg-sidebar: linear-gradient(180deg, #152033 0%, #10192A 100%);
+  --bg-header: rgba(22, 32, 51, 0.92);
   --bg-input: #334155;
   --bg-hover: #334155;
   --bg-active: #1E3A5F;
@@ -124,8 +158,32 @@
   --shadow-toolbar: 0 8px 32px rgba(0, 0, 0, 0.4);
 
   --color-primary-light: #1E3A5F;
-  --color-danger-light: #4C0519;
-  --color-warning-light: #451A03;
-  --color-accent-light: #134E4A;
+  --color-primary-bg: #172554;
+  --color-primary-border: #1D4ED8;
+  --color-primary-text: #93C5FD;
+
   --color-success-light: #064E3B;
+  --color-success-bg: #022C22;
+  --color-success-border: #047857;
+  --color-success-text: #6EE7B7;
+
+  --color-warning-light: #451A03;
+  --color-warning-bg: #422006;
+  --color-warning-border: #B45309;
+  --color-warning-text: #FCD34D;
+
+  --color-danger-light: #4C0519;
+  --color-danger-bg: #4C0519;
+  --color-danger-border: #BE123C;
+  --color-danger-text: #FDA4AF;
+
+  --color-info-light: #0C4A6E;
+  --color-info-bg: #082F49;
+  --color-info-border: #0369A1;
+  --color-info-text: #7DD3FC;
+
+  --color-accent-light: #134E4A;
+  --color-accent-bg: #042F2E;
+  --color-accent-border: #0F766E;
+  --color-accent-text: #5EEAD4;
 }
